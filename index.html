@@ -187,6 +187,13 @@
   .seg button.active{background:var(--gold);color:#221a0e;font-weight:600;}
 
   /* settings */
+  .field{margin-bottom:12px;}
+  .field label{font-size:.78rem;color:var(--text-dim);display:block;margin-bottom:5px;}
+  .field input{
+    width:100%;background:var(--bg-card);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:10px 11px;font-size:.88rem;
+  }
+  .check-row{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;}
   .hint{color:var(--text-faint);font-size:.76rem;line-height:1.5;margin:6px 0 16px;}
 
   /* toast */
@@ -336,12 +343,12 @@
   <section class="tab" id="tab-settings">
     <h2 class="section-title">Seri (streak) ve gelişim bonusları</h2>
     <p class="hint">Bu bonuslar otomatik olarak "Bugün" listene ve puanlarına eklenir. İstemezsen sonradan normal bir kayıt gibi silebilirsin.</p>
-    <label class="check-row" style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;"><input type="checkbox" id="set-streak-enabled"> Üst üste pozitif gün serisine bonus ver</label>
+    <label class="check-row"><input type="checkbox" id="set-streak-enabled"> Üst üste pozitif gün serisine bonus ver</label>
     <div class="form-row">
       <div class="field"><label>Kaç gün üst üste pozitif olunca</label><input type="text" inputmode="numeric" id="set-streak-length" placeholder="3"></div>
       <div class="field"><label>Bonus puan</label><input type="text" inputmode="decimal" id="set-streak-bonus" placeholder="2"></div>
     </div>
-    <label class="check-row" style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;"><input type="checkbox" id="set-weekly-enabled"> Bu hafta önceki haftayı geçersem bonus ver</label>
+    <label class="check-row"><input type="checkbox" id="set-weekly-enabled"> Bu hafta önceki haftayı geçersem bonus ver</label>
     <div class="field"><label>Bonus puan</label><input type="text" inputmode="decimal" id="set-weekly-bonus" placeholder="3"></div>
 
     <h2 class="section-title">Yedekleme</h2>
