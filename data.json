@@ -30,10 +30,10 @@
   ],
   "logs": [],
   "settings": {
-    "streakEnabled": false,
+    "streakEnabled": true,
     "streakLength": 3,
     "streakBonus": 2,
-    "weeklyEnabled": false,
+    "weeklyEnabled": true,
     "weeklyBonus": 3
   }
 }
