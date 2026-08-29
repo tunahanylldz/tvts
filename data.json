@@ -2,12 +2,6 @@
   "startDate": "2026-08-29",
   "rules": [
     {
-      "id": "mtegvgoqvmrl4f",
-      "name": "Sigara",
-      "type": "count",
-      "points": -1
-    },
-    {
       "id": "mtegvgoqzgxj9k",
       "name": "Spor yaptım",
       "type": "count",
