@@ -1,27 +1,6 @@
 {
   "startDate": "2026-08-29",
-  "rules": [
-    {
-      "id": "mtegvgoqzgxj9k",
-      "name": "Spor yaptım",
-      "type": "count",
-      "points": 2
-    },
-    {
-      "id": "mtegvgoqbsgsb3",
-      "name": "Gelir (TL)",
-      "type": "amount",
-      "unit": 500,
-      "points": 1
-    },
-    {
-      "id": "mtegvgoq07ayan",
-      "name": "Gider (TL)",
-      "type": "amount",
-      "unit": 500,
-      "points": -1
-    }
-  ],
+  "rules": [],
   "logs": [],
   "settings": {
     "streakEnabled": true,
