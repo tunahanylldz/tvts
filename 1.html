@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#15171c">
+<title>Verim Karnesi</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📒</text></svg>">
+<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;Verim Karnesi&quot;,&quot;display&quot;:&quot;standalone&quot;}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#15171c;
+    --bg-raised:#1c1f26;
+    --bg-card:#20232b;
+    --line:#2b2f3a;
+    --text:#eceef2;
+    --text-dim:#9aa1b0;
+    --text-faint:#5d6376;
+    --gold:#e0a95e;
+    --gold-dim:#7a6543;
+    --plus:#5fbf8f;
+    --plus-dim:#25382f;
+    --minus:#e0715e;
+    --minus-dim:#3a2723;
+    --accent:#8b93ff;
+    --radius:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    padding-bottom:88px;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  header.top{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--bg) 70%,transparent);
+    padding:22px 20px 10px;
+  }
+  header.top h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.5rem;
+    margin:0 0 2px;
+    letter-spacing:-.02em;
+  }
+  header.top .sub{color:var(--text-dim);font-size:.85rem;}
+
+  .ribbon{
+    display:flex;gap:3px;align-items:flex-end;
+    height:34px;padding:14px 20px 4px;overflow:hidden;
+  }
+  .ribbon .bit{
+    flex:1;min-width:2px;border-radius:2px 2px 0 0;
+    background:var(--line);
+  }
+
+  main{padding:0 16px;max-width:720px;margin:0 auto;}
+  section.tab{display:none;animation:fade .25s ease;}
+  section.tab.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:6px 0 18px;}
+  .stat-card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .stat-card .num{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:600;}
+  .stat-card .lbl{color:var(--text-dim);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+  .stat-card.wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;}
+  .pos{color:var(--plus);}
+  .neg{color:var(--minus);}
+
+  h2.section-title{
+    font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:22px 0 10px;
+    color:var(--text);display:flex;justify-content:space-between;align-items:center;
+  }
+  h2.section-title small{color:var(--text-faint);font-weight:400;font-size:.75rem;}
+
+  .rule-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .rule-btn{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;text-align:left;cursor:pointer;color:var(--text);
+    display:flex;flex-direction:column;gap:6px;transition:transform .12s, border-color .12s;
+  }
+  .rule-btn:active{transform:scale(.97);}
+  .rule-btn .name{font-weight:600;font-size:.92rem;}
+  .rule-btn .pts{font-family:'IBM Plex Mono',monospace;font-size:.8rem;}
+  .rule-btn.plus{border-color:var(--plus-dim);}
+  .rule-btn.minus{border-color:var(--minus-dim);}
+
+  .amount-row{display:flex;gap:8px;margin-top:6px;}
+  .amount-row input{
+    flex:1;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:.9rem;
+  }
+  .amount-row button{
+    background:var(--gold);color:#221a0e;border:none;border-radius:10px;
+    padding:0 16px;font-weight:600;cursor:pointer;font-size:.85rem;
+  }
+
+  .log-list{list-style:none;margin:0;padding:0;}
+  .log-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 4px;border-bottom:1px solid var(--line);font-size:.88rem;
+  }
+  .log-item .l-name{font-weight:500;}
+  .log-item .l-meta{color:var(--text-faint);font-size:.75rem;}
+  .log-item .l-right{display:flex;align-items:center;gap:10px;}
+  .log-item .l-pts{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .del-x{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:1rem;padding:2px 6px;}
+  .del-x:hover{color:var(--minus);}
+  .empty{color:var(--text-faint);font-size:.85rem;padding:18px 4px;text-align:center;}
+
+  /* rules manager */
+  .rule-row{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-bottom:10px;
+  }
+  .rule-row .head{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .rule-row .head .title{font-weight:600;}
+  .rule-row .details{color:var(--text-dim);font-size:.8rem;margin-top:4px;}
+  .icon-btn{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.95rem;padding:4px 6px;}
+  .icon-btn:hover{color:var(--text);}
+
+  form.rule-form{
+    background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;
+  }
+  form.rule-form label{font-size:.75rem;color:var(--text-dim);display:block;margin-bottom:4px;}
+  form.rule-form input, form.rule-form select{
+    width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:9px 10px;font-size:.9rem;
+  }
+  .form-row{display:flex;gap:10px;}
+  .form-row > div{flex:1;}
+  .btn{
+    background:var(--gold);color:#221a0e;border:none;border-radius:10px;
+    padding:11px;font-weight:600;cursor:pointer;font-size:.9rem;
+  }
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+  .btn.danger{background:var(--minus);color:#2a0f0a;}
+  .btn-row{display:flex;gap:8px;}
+  .btn-row .btn{flex:1;}
+
+  /* calendar */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cal-head .nav{display:flex;gap:6px;}
+  .cal-head button{background:var(--bg-card);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 10px;cursor:pointer;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-dow{text-align:center;font-size:.7rem;color:var(--text-faint);padding-bottom:4px;}
+  .cal-day{
+    aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:var(--bg-card);border:1px solid var(--line);font-size:.72rem;cursor:pointer;color:var(--text-dim);gap:2px;
+  }
+  .cal-day .d{font-family:'IBM Plex Mono',monospace;font-size:.78rem;}
+  .cal-day .s{font-size:.65rem;font-weight:600;}
+  .cal-day.empty-cell{background:transparent;border:none;cursor:default;}
+  .cal-day.today{border-color:var(--gold);}
+  .cal-legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:.72rem;color:var(--text-faint);}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .day-panel{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-top:14px;
+  }
+
+  /* charts */
+  .chart-wrap{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:16px;}
+  .chart-wrap .ct{font-size:.8rem;color:var(--text-dim);margin-bottom:8px;font-weight:600;}
+  .seg{display:flex;background:var(--bg-raised);border-radius:10px;padding:3px;margin-bottom:14px;}
+  .seg button{flex:1;background:none;border:none;color:var(--text-dim);padding:8px;border-radius:8px;font-size:.8rem;cursor:pointer;}
+  .seg button.active{background:var(--gold);color:#221a0e;font-weight:600;}
+
+  /* settings */
+  .field{margin-bottom:12px;}
+  .field label{font-size:.78rem;color:var(--text-dim);display:block;margin-bottom:5px;}
+  .field input{
+    width:100%;background:var(--bg-card);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:10px 11px;font-size:.88rem;
+  }
+  .check-row{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;}
+  .status-pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;}
+  .status-pill.ok{background:var(--plus-dim);color:var(--plus);}
+  .status-pill.err{background:var(--minus-dim);color:var(--minus);}
+  .status-pill.idle{background:var(--bg-raised);color:var(--text-faint);}
+  .hint{color:var(--text-faint);font-size:.76rem;line-height:1.5;margin:6px 0 16px;}
+  .hint code{background:var(--bg-raised);padding:1px 5px;border-radius:5px;}
+
+  /* toast */
+  #toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--bg-raised);border:1px solid var(--line);color:var(--text);
+    padding:10px 18px;border-radius:30px;font-size:.82rem;opacity:0;pointer-events:none;
+    transition:all .25s ease;z-index:100;box-shadow:0 6px 24px rgba(0,0,0,.4);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  nav.tabbar{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;
+    background:rgba(28,31,38,.92);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.tabbar button{
+    flex:1;background:none;border:none;color:var(--text-faint);
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:8px 2px;cursor:pointer;font-size:.65rem;border-radius:10px;
+  }
+  nav.tabbar button .ic{font-size:1.15rem;}
+  nav.tabbar button.active{color:var(--gold);}
+
+  ::-webkit-scrollbar{width:0;height:0;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 id="pageTitle">Verim Karnesi</h1>
+  <div class="sub" id="pageSub">bugün · <span id="todayLabel"></span></div>
+</header>
+<div class="ribbon" id="ribbon"></div>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <section class="tab active" id="tab-dashboard">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num mono" id="statToday">0</div><div class="lbl">bugünkü puan</div></div>
+      <div class="stat-card"><div class="num mono" id="statTotal">0</div><div class="lbl">toplam puan</div></div>
+      <div class="stat-card wide">
+        <div><div class="num mono" id="statWeekAvg" style="font-size:1.1rem">0</div><div class="lbl">haftalık ortalama</div></div>
+        <div><div class="num mono" id="statMonthAvg" style="font-size:1.1rem">0</div><div class="lbl">aylık ortalama</div></div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Görevler <small id="ruleCount"></small></h2>
+    <div class="rule-btn-grid" id="ruleButtons"></div>
+
+    <h2 class="section-title">Özel giriş <small>istisnai bir olay için</small></h2>
+    <div class="rule-row">
+      <div class="form-row">
+        <div class="field" style="margin-bottom:0"><label>Tarih</label><input type="date" id="custom-date"></div>
+        <div class="field" style="margin-bottom:0"><label>Puan (+ / -)</label><input type="text" inputmode="decimal" id="custom-points" placeholder="-3"></div>
+      </div>
+      <div class="field" style="margin:10px 0 0"><label>Not</label><input type="text" id="custom-note" placeholder="örn. Beklenmedik büyük fatura ödedim"></div>
+      <button class="btn" id="btnCustomAdd" style="width:100%;margin-top:10px">Kaydet</button>
+    </div>
+
+    <h2 class="section-title">Bugünün kayıtları</h2>
+    <ul class="log-list" id="todayLogs"></ul>
+  </section>
+
+  <!-- RULES -->
+  <section class="tab" id="tab-rules">
+    <h2 class="section-title">Yeni görev ekle</h2>
+    <form class="rule-form" id="ruleForm">
+      <div>
+        <label>Görev adı</label>
+        <input type="text" id="rf-name" placeholder="örn. Sigara, Spor, Erken kalkma, Gelir (TL)">
+      </div>
+      <div>
+        <label>Tür</label>
+        <select id="rf-type">
+          <option value="count">Sayaç (her tıklamada 1 adet)</option>
+          <option value="amount">Tutar (TL girerek)</option>
+        </select>
+      </div>
+      <div class="form-row" id="rf-amount-row" style="display:none">
+        <div>
+          <label>Birim (TL)</label>
+          <input type="text" inputmode="decimal" id="rf-unit" placeholder="500">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label id="rf-points-label">Adet başına puan</label>
+          <input type="text" inputmode="decimal" id="rf-points" placeholder="örn. -1 veya 0.5">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn">Görevi kaydet</button>
+      </div>
+    </form>
+
+    <h2 class="section-title">Tüm görevler</h2>
+    <div id="rulesList"></div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="tab" id="tab-calendar">
+    <div class="cal-head">
+      <div class="display" id="calMonthLabel" style="font-weight:600"></div>
+      <div class="nav">
+        <button id="calPrev">‹</button>
+        <button id="calToday">bugün</button>
+        <button id="calNext">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <span><span class="dot" style="background:var(--plus)"></span> pozitif</span>
+      <span><span class="dot" style="background:var(--line)"></span> nötr / veri yok</span>
+      <span><span class="dot" style="background:var(--minus)"></span> negatif</span>
+    </div>
+    <div class="day-panel" id="dayPanel" style="display:none"></div>
+  </section>
+
+  <!-- CHARTS -->
+  <section class="tab" id="tab-charts">
+    <div class="seg" id="chartRange">
+      <button data-range="30" class="active">Son 30 gün</button>
+      <button data-range="90">Son 90 gün</button>
+      <button data-range="365">Son 12 ay</button>
+    </div>
+    <div class="chart-wrap">
+      <div class="ct">Günlük puan seyri</div>
+      <canvas id="lineChart" height="180"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="ct">Haftalık toplamlar</div>
+      <canvas id="weekChart" height="180"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="ct">Göreve göre dağılım (seçili aralık)</div>
+      <canvas id="ruleChart" height="200"></canvas>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="tab" id="tab-settings">
+    <h2 class="section-title">GitHub ile senkronizasyon <span class="status-pill idle" id="ghStatus">bağlı değil</span></h2>
+    <p class="hint">
+      Verilerin bir GitHub deposundaki tek bir JSON dosyasında (örn. <code>data.json</code>) saklanmasını sağlar,
+      böylece telefon ve bilgisayardan aynı veriye ulaşırsın. Depo <b>private</b> olmalı.
+      GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token,
+      sadece bu depoya <b>Contents: Read and write</b> izniyle oluştur.
+    </p>
+    <div class="field"><label>GitHub kullanıcı adı / organizasyon</label><input id="cfg-owner" placeholder="kullaniciadi"></div>
+    <div class="field"><label>Depo adı</label><input id="cfg-repo" placeholder="verim-takip-data"></div>
+    <div class="field"><label>Dosya yolu</label><input id="cfg-path" placeholder="data.json"></div>
+    <div class="field"><label>Branch</label><input id="cfg-branch" placeholder="main"></div>
+    <div class="field"><label>Personal Access Token</label><input id="cfg-token" type="password" placeholder="github_pat_..."></div>
+    <label class="check-row"><input type="checkbox" id="cfg-remember"> Bu tarayıcıda token'ı hatırla (kendi cihazında güvenliyse aç)</label>
+    <div class="btn-row">
+      <button class="btn ghost" id="btnTest">Bağlantıyı test et</button>
+      <button class="btn ghost" id="btnPull">GitHub'dan yükle</button>
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn" id="btnPush">Şimdi GitHub'a kaydet</button>
+    </div>
+    <label class="check-row"><input type="checkbox" id="cfg-autosync"> Her değişiklikte otomatik senkronize et</label>
+
+    <h2 class="section-title">Seri (streak) ve gelişim bonusları</h2>
+    <p class="hint">Bu bonuslar otomatik olarak "Bugün" listene ve puanlarına eklenir. İstemezsen sonradan normal bir kayıt gibi silebilirsin.</p>
+    <label class="check-row"><input type="checkbox" id="set-streak-enabled"> Üst üste pozitif gün serisine bonus ver</label>
+    <div class="form-row">
+      <div class="field"><label>Kaç gün üst üste pozitif olunca</label><input type="text" inputmode="numeric" id="set-streak-length" placeholder="3"></div>
+      <div class="field"><label>Bonus puan</label><input type="text" inputmode="decimal" id="set-streak-bonus" placeholder="2"></div>
+    </div>
+    <label class="check-row"><input type="checkbox" id="set-weekly-enabled"> Bu hafta önceki haftayı geçersem bonus ver</label>
+    <div class="field"><label>Bonus puan</label><input type="text" inputmode="decimal" id="set-weekly-bonus" placeholder="3"></div>
+
+    <h2 class="section-title">Yedekleme</h2>
+    <div class="btn-row">
+      <button class="btn ghost" id="btnExport">JSON dışa aktar</button>
+      <button class="btn ghost" id="btnImportTrigger">JSON içe aktar</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+
+    <h2 class="section-title">Tehlikeli bölge</h2>
+    <div class="btn-row">
+      <button class="btn danger" id="btnReset">Tüm verileri sıfırla</button>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast"></div>
+
+<nav class="tabbar">
+  <button data-tab="dashboard" class="active"><span class="ic">●</span>Bugün</button>
+  <button data-tab="rules"><span class="ic">☰</span>Görevler</button>
+  <button data-tab="calendar"><span class="ic">▦</span>Takvim</button>
+  <button data-tab="charts"><span class="ic">◤</span>Grafik</button>
+  <button data-tab="settings"><span class="ic">⚙</span>Ayarlar</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- storage helpers (safe against environments without localStorage) ---------- */
+const memStore = {};
+function lsGet(k){ try{ const v = localStorage.getItem(k); return v===null?undefined:v; }catch(e){ return memStore[k]; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){ memStore[k]=v; } }
+
+const DATA_KEY = 'vk_data_v1';
+const CFG_KEY = 'vk_cfg_v1';
+
+/* ---------- default state ---------- */
+function defaultState(){
+  return {
+    startDate: todayStr(),
+    rules: [
+      {id: uid(), name:'Sigara', type:'count', points:-1},
+      {id: uid(), name:'Spor yaptım', type:'count', points:2},
+      {id: uid(), name:'Gelir (TL)', type:'amount', unit:500, points:1},
+      {id: uid(), name:'Gider (TL)', type:'amount', unit:500, points:-1}
+    ],
+    logs: [],
+    settings: { streakEnabled:false, streakLength:3, streakBonus:2, weeklyEnabled:false, weeklyBonus:3 }
+  };
+}
+function normalizeState(){
+  if(!state.rules) state.rules = [];
+  if(!state.logs) state.logs = [];
+  if(!state.startDate) state.startDate = todayStr();
+  if(!state.settings) state.settings = { streakEnabled:false, streakLength:3, streakBonus:2, weeklyEnabled:false, weeklyBonus:3 };
+  const s = state.settings;
+  if(typeof s.streakEnabled!=='boolean') s.streakEnabled=false;
+  if(!s.streakLength) s.streakLength=3;
+  if(typeof s.streakBonus!=='number') s.streakBonus=2;
+  if(typeof s.weeklyEnabled!=='boolean') s.weeklyEnabled=false;
+  if(typeof s.weeklyBonus!=='number') s.weeklyBonus=3;
+}
+function round2(n){ return Math.round((n+Number.EPSILON)*100)/100; }
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function parseNum(v){
+  if(v===null || v===undefined) return NaN;
+  const cleaned = String(v).trim().replace(',', '.');
+  if(cleaned==='') return NaN;
+  return parseFloat(cleaned);
+}
+function todayStr(){ return fmtDate(new Date()); }
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+
+let state = loadLocal() || defaultState();
+normalizeState();
+let cfg = loadCfg();
+
+function loadLocal(){
+  const raw = lsGet(DATA_KEY);
+  if(!raw) return null;
+  try{ return JSON.parse(raw); }catch(e){ return null; }
+}
+function saveLocal(){ lsSet(DATA_KEY, JSON.stringify(state)); }
+
+function loadCfg(){
+  const raw = lsGet(CFG_KEY);
+  let c = {owner:'',repo:'',path:'data.json',branch:'main',token:'',remember:false,autosync:false};
+  if(raw){ try{ c = Object.assign(c, JSON.parse(raw)); }catch(e){} }
+  return c;
+}
+function saveCfg(){
+  const toSave = Object.assign({}, cfg);
+  if(!cfg.remember) toSave.token = ''; // never persist token unless user opts in
+  lsSet(CFG_KEY, JSON.stringify(toSave));
+}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+/* ---------- derived data helpers ---------- */
+function logsForDate(dateStr){ return state.logs.filter(l=>l.date===dateStr); }
+function scoreForDate(dateStr){ return round2(logsForDate(dateStr).reduce((s,l)=>s+l.points,0)); }
+function scoreForRange(startStr,endStr){
+  return round2(state.logs.filter(l=>l.date>=startStr && l.date<=endStr).reduce((s,l)=>s+l.points,0));
+}
+function totalScore(){ return round2(state.logs.reduce((s,l)=>s+l.points,0)); }
+function daysSinceStart(){
+  const d = Math.floor((parseDate(todayStr()) - parseDate(state.startDate))/86400000)+1;
+  return Math.max(d,1);
+}
+function weekAverage(){
+  const end = todayStr();
+  const start = fmtDate(addDays(parseDate(end),-6));
+  return round2(scoreForRange(start,end)/7);
+}
+function monthAverage(){
+  const now = new Date();
+  const start = fmtDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  const end = todayStr();
+  const daysInMonthSoFar = now.getDate();
+  return round2(scoreForRange(start,end)/daysInMonthSoFar);
+}
+function mondayOf(dateStr){ const d=parseDate(dateStr); const day=(d.getDay()+6)%7; return fmtDate(addDays(d,-day)); }
+function hasAward(dateStr, kind){ return state.logs.some(l=>l.date===dateStr && l.kind===kind); }
+function checkDailyStreak(){
+  const s = state.settings;
+  if(!s.streakEnabled || !s.streakLength || !s.streakBonus) return;
+  const today = todayStr();
+  let streak = 0, d = parseDate(today);
+  while(true){
+    const ds = fmtDate(d);
+    if(scoreForDate(ds) > 0){ streak++; d = addDays(d,-1); } else break;
+  }
+  if(streak>0 && streak % s.streakLength === 0 && !hasAward(today,'streakBonus')){
+    state.logs.push({id:uid(), ruleId:null, kind:'streakBonus', note:`${streak} gün üst üste pozitif seri bonusu`, date:today, quantity:1, points:s.streakBonus, ts:Date.now()});
+    toast(`🔥 ${streak} günlük pozitif seri! ${s.streakBonus>=0?'+':''}${s.streakBonus} bonus puan`);
+  }
+}
+function checkWeeklyImprovement(){
+  const s = state.settings;
+  if(!s.weeklyEnabled || !s.weeklyBonus) return;
+  const today = todayStr();
+  const thisMonday = mondayOf(today);
+  const lastMonday = fmtDate(addDays(parseDate(thisMonday),-7));
+  const lastSunday = fmtDate(addDays(parseDate(thisMonday),-1));
+  const thisWeekScore = scoreForRange(thisMonday, today);
+  const lastWeekScore = scoreForRange(lastMonday, lastSunday);
+  const alreadyAwarded = state.logs.some(l=>l.kind==='weeklyBonus' && mondayOf(l.date)===thisMonday);
+  if(thisWeekScore > lastWeekScore && !alreadyAwarded){
+    state.logs.push({id:uid(), ruleId:null, kind:'weeklyBonus', note:'Bu hafta önceki haftayı geçti bonusu', date:today, quantity:1, points:s.weeklyBonus, ts:Date.now()});
+    toast(`📈 Bu hafta önceki haftayı geçtin! ${s.weeklyBonus>=0?'+':''}${s.weeklyBonus} bonus puan`);
+  }
+}
+function checkStreaksAndAwards(){ checkDailyStreak(); checkWeeklyImprovement(); }
+function ruleById(id){ return state.rules.find(r=>r.id===id); }
+
+/* ---------- rendering: tabs ---------- */
+const tabs = ['dashboard','rules','calendar','charts','settings'];
+document.querySelectorAll('nav.tabbar button').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+function switchTab(name){
+  tabs.forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===name);
+  });
+  document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  if(name==='calendar') renderCalendar();
+  if(name==='charts') renderCharts();
+  if(name==='rules') renderRulesList();
+  if(name==='settings') renderSettings();
+}
+
+/* ---------- header ribbon (signature sparkline of last 60 days) ---------- */
+function renderRibbon(){
+  const el = document.getElementById('ribbon');
+  el.innerHTML = '';
+  const end = parseDate(todayStr());
+  const days = 60;
+  let max = 1;
+  const vals = [];
+  for(let i=days-1;i>=0;i--){
+    const d = fmtDate(addDays(end,-i));
+    const v = scoreForDate(d);
+    vals.push(v);
+    max = Math.max(max, Math.abs(v));
+  }
+  vals.forEach(v=>{
+    const bit = document.createElement('div');
+    bit.className = 'bit';
+    const h = Math.max(2, Math.round((Math.abs(v)/max)*30));
+    bit.style.height = h+'px';
+    bit.style.background = v>0?'var(--plus)':(v<0?'var(--minus)':'var(--line)');
+    el.appendChild(bit);
+  });
+}
+
+/* ---------- dashboard ---------- */
+function renderDashboard(){
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'});
+  const t = scoreForDate(todayStr());
+  const total = totalScore();
+  document.getElementById('statToday').textContent = (t>0?'+':'')+t;
+  document.getElementById('statToday').className = 'num mono '+(t>0?'pos':(t<0?'neg':''));
+  document.getElementById('statTotal').textContent = (total>0?'+':'')+total;
+  document.getElementById('statTotal').className = 'num mono '+(total>0?'pos':(total<0?'neg':''));
+  const wa = weekAverage(), ma = monthAverage();
+  document.getElementById('statWeekAvg').textContent = wa.toFixed(1);
+  document.getElementById('statMonthAvg').textContent = ma.toFixed(1);
+
+  document.getElementById('ruleCount').textContent = state.rules.length+' görev';
+  const grid = document.getElementById('ruleButtons');
+  grid.innerHTML = '';
+  state.rules.forEach(r=>{
+    const btn = document.createElement('div');
+    btn.className = 'rule-btn '+(r.points>=0?'plus':'minus');
+    if(r.type==='count'){
+      btn.innerHTML = `
+        <div class="name">${escapeHtml(r.name)}</div>
+        <div class="pts ${r.points>=0?'pos':'neg'}">${r.points>=0?'+':''}${r.points} puan / tıklama</div>`;
+      btn.addEventListener('click', ()=> addLog(r.id, 1, r.points));
+    } else {
+      btn.innerHTML = `
+        <div class="name">${escapeHtml(r.name)}</div>
+        <div class="pts ${r.points>=0?'pos':'neg'}">${r.points>=0?'+':''}${r.points} puan / ${r.unit}₺ (orantılı)</div>
+        <div class="amount-row">
+          <input type="text" inputmode="decimal" placeholder="tutar ₺" id="amt-${r.id}">
+          <button type="button" data-rid="${r.id}" class="amt-add">Ekle</button>
+        </div>`;
+    }
+    grid.appendChild(btn);
+  });
+  grid.querySelectorAll('.amt-add').forEach(b=>{
+    b.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const rid = b.dataset.rid;
+      const input = document.getElementById('amt-'+rid);
+      const amount = parseNum(input.value);
+      if(!amount || isNaN(amount)){ toast('Bir tutar gir.'); return; }
+      const rule = ruleById(rid);
+      const units = amount/rule.unit;
+      const pts = round2(units*rule.points);
+      addLog(rid, amount, pts, {amount});
+      input.value='';
+    });
+  });
+
+  const list = document.getElementById('todayLogs');
+  const todays = logsForDate(todayStr()).slice().reverse();
+  list.innerHTML = '';
+  if(todays.length===0){
+    list.innerHTML = '<div class="empty">Bugün için henüz kayıt yok.</div>';
+  } else {
+    todays.forEach(l=>{
+      const r = ruleById(l.ruleId);
+      const li = document.createElement('li');
+      li.className = 'log-item';
+      const time = new Date(l.ts).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+      const metaText = r && r.type==='amount' ? `${l.amount}₺ · ${time}` : time;
+      li.innerHTML = `
+        <div>
+          <div class="l-name">${escapeHtml(logDisplayName(l))}</div>
+          <div class="l-meta">${metaText}</div>
+        </div>
+        <div class="l-right">
+          <div class="l-pts ${l.points>=0?'pos':'neg'}">${l.points>=0?'+':''}${l.points}</div>
+          <button class="del-x" data-id="${l.id}">✕</button>
+        </div>`;
+      list.appendChild(li);
+    });
+    list.querySelectorAll('.del-x').forEach(b=>{
+      b.addEventListener('click', ()=> deleteLog(b.dataset.id));
+    });
+  }
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function addLog(ruleId, quantity, points, extra){
+  const log = Object.assign({id:uid(), ruleId, date:todayStr(), quantity, points, ts:Date.now()}, extra||{});
+  state.logs.push(log);
+  persist();
+  renderAll();
+  toast((points>=0?'+':'')+points+' puan eklendi');
+}
+
+document.getElementById('btnCustomAdd').addEventListener('click', ()=>{
+  const dateInput = document.getElementById('custom-date').value;
+  const date = dateInput || todayStr();
+  const points = round2(parseNum(document.getElementById('custom-points').value));
+  const note = document.getElementById('custom-note').value.trim();
+  if(isNaN(points)){ toast('Puan alanına bir sayı gir (örn. -3 veya 2.5).'); return; }
+  if(!note){ toast('Kısa bir not yaz.'); return; }
+  state.logs.push({id:uid(), ruleId:null, kind:'custom', note, date, quantity:1, points, ts:Date.now()});
+  persist();
+  document.getElementById('custom-note').value='';
+  document.getElementById('custom-points').value='';
+  renderAll();
+  toast((points>=0?'+':'')+points+' puan eklendi ('+date+')');
+});
+function logDisplayName(l){
+  if(l.ruleId){
+    const r = ruleById(l.ruleId);
+    return r ? r.name : '(silinmiş görev)';
+  }
+  if(l.kind==='streakBonus') return '🔥 '+l.note;
+  if(l.kind==='weeklyBonus') return '📈 '+l.note;
+  return '📝 '+(l.note||'Özel giriş');
+}
+function deleteLog(id){
+  state.logs = state.logs.filter(l=>l.id!==id);
+  persist();
+  renderAll();
+}
+
+/* ---------- rules manager ---------- */
+const typeSel = document.getElementById('rf-type');
+typeSel.addEventListener('change', updateRuleFormMode);
+function updateRuleFormMode(){
+  const isAmount = typeSel.value === 'amount';
+  document.getElementById('rf-amount-row').style.display = isAmount ? 'flex':'none';
+  document.getElementById('rf-points-label').textContent = isAmount ? 'Birim başına puan' : 'Adet başına puan';
+}
+document.getElementById('ruleForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('rf-name').value.trim();
+  const type = document.getElementById('rf-type').value;
+  const points = parseNum(document.getElementById('rf-points').value);
+  if(!name){ toast('Görev adı gerekli.'); return; }
+  if(isNaN(points)){ toast('Puan alanına bir sayı gir (örn. -1 veya 0.5).'); return; }
+  const rule = {id:uid(), name, type, points};
+  if(type==='amount'){
+    const unit = parseNum(document.getElementById('rf-unit').value);
+    if(!unit){ toast('Tutar türü için birim (TL) gerekli.'); return; }
+    rule.unit = unit;
+  }
+  state.rules.push(rule);
+  persist();
+  e.target.reset();
+  updateRuleFormMode();
+  renderRulesList();
+  renderDashboard();
+  toast('Görev eklendi');
+});
+
+function renderRulesList(){
+  const wrap = document.getElementById('rulesList');
+  wrap.innerHTML = '';
+  if(state.rules.length===0){ wrap.innerHTML = '<div class="empty">Henüz görev yok.</div>'; return; }
+  state.rules.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'rule-row';
+    const detail = r.type==='amount'
+      ? `Her ${r.unit}₺ için ${r.points>=0?'+':''}${r.points} puan`
+      : `Her tıklamada ${r.points>=0?'+':''}${r.points} puan`;
+    row.innerHTML = `
+      <div class="head">
+        <div class="title">${escapeHtml(r.name)}</div>
+        <div>
+          <button class="icon-btn" data-act="edit" data-id="${r.id}">✎ düzenle</button>
+          <button class="icon-btn" data-act="del" data-id="${r.id}">🗑</button>
+        </div>
+      </div>
+      <div class="details">${detail} · ${r.type==='amount'?'tutar türü':'sayaç türü'}</div>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-act="del"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(confirm('Bu görevi silmek istediğine emin misin? Geçmiş kayıtlar korunur.')){
+        state.rules = state.rules.filter(r=>r.id!==b.dataset.id);
+        persist(); renderRulesList(); renderDashboard();
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-act="edit"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const r = ruleById(b.dataset.id);
+      const newName = prompt('Görev adı:', r.name);
+      if(newName===null) return;
+      const newPoints = prompt('Puan değeri:', r.points);
+      if(newPoints===null) return;
+      r.name = newName.trim() || r.name;
+      const parsedPoints = parseNum(newPoints);
+      if(!isNaN(parsedPoints)) r.points = parsedPoints;
+      if(r.type==='amount'){
+        const newUnit = prompt('Birim (TL):', r.unit);
+        if(newUnit!==null){ const parsedUnit = parseNum(newUnit); if(!isNaN(parsedUnit) && parsedUnit) r.unit = parsedUnit; }
+      }
+      persist(); renderRulesList(); renderDashboard();
+    });
+  });
+}
+
+/* ---------- calendar ---------- */
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+document.getElementById('calPrev').addEventListener('click', ()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); });
+document.getElementById('calNext').addEventListener('click', ()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); });
+document.getElementById('calToday').addEventListener('click', ()=>{ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); renderCalendar(); });
+
+function renderCalendar(){
+  const label = new Date(calYear,calMonth,1).toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+  document.getElementById('calMonthLabel').textContent = label.charAt(0).toUpperCase()+label.slice(1);
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].forEach(d=>{
+    const el = document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
+  });
+  const first = new Date(calYear,calMonth,1);
+  let startOffset = first.getDay()-1; if(startOffset<0) startOffset=6;
+  const daysInMonth = new Date(calYear,calMonth+1,0).getDate();
+
+  let maxAbs = 1;
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = fmtDate(new Date(calYear,calMonth,d));
+    maxAbs = Math.max(maxAbs, Math.abs(scoreForDate(ds)));
+  }
+
+  for(let i=0;i<startOffset;i++){
+    const el = document.createElement('div'); el.className='cal-day empty-cell'; grid.appendChild(el);
+  }
+  const todayS = todayStr();
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(calYear,calMonth,d);
+    const ds = fmtDate(dateObj);
+    const score = scoreForDate(ds);
+    const el = document.createElement('div');
+    el.className = 'cal-day'+(ds===todayS?' today':'');
+    const intensity = Math.min(1, Math.abs(score)/maxAbs);
+    if(score>0) el.style.background = `color-mix(in srgb, var(--plus) ${20+intensity*55}%, var(--bg-card))`;
+    else if(score<0) el.style.background = `color-mix(in srgb, var(--minus) ${20+intensity*55}%, var(--bg-card))`;
+    el.innerHTML = `<div class="d">${d}</div>${score!==0?`<div class="s">${score>0?'+':''}${score}</div>`:''}`;
+    el.addEventListener('click', ()=> showDayPanel(ds));
+    grid.appendChild(el);
+  }
+}
+
+function showDayPanel(ds){
+  const panel = document.getElementById('dayPanel');
+  const logs = logsForDate(ds);
+  const score = scoreForDate(ds);
+  const dLabel = parseDate(ds).toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let rows = '<div class="empty">Bu gün için kayıt yok.</div>';
+  if(logs.length){
+    rows = logs.map(l=>{
+      return `<div class="log-item"><div class="l-name">${escapeHtml(logDisplayName(l))}</div>
+        <div class="l-pts ${l.points>=0?'pos':'neg'}">${l.points>=0?'+':''}${l.points}</div></div>`;
+    }).join('');
+  }
+  panel.style.display = 'block';
+  panel.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <b>${dLabel}</b><span class="mono ${score>=0?'pos':'neg'}">${score>=0?'+':''}${score}</span>
+    </div>${rows}`;
+}
+
+/* ---------- charts ---------- */
+let lineChart, weekChart, ruleChart;
+let chartRangeDays = 30;
+document.querySelectorAll('#chartRange button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#chartRange button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    chartRangeDays = parseInt(b.dataset.range);
+    renderCharts();
+  });
+});
+
+function renderCharts(){
+  if(typeof Chart === 'undefined'){ return; } // offline fallback: skip silently
+  const end = parseDate(todayStr());
+  const labels = [], data = [];
+  for(let i=chartRangeDays-1;i>=0;i--){
+    const d = addDays(end,-i);
+    labels.push(d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit'}));
+    data.push(scoreForDate(fmtDate(d)));
+  }
+  const ctx1 = document.getElementById('lineChart');
+  if(lineChart) lineChart.destroy();
+  lineChart = new Chart(ctx1, {
+    type:'line',
+    data:{ labels, datasets:[{ data, borderColor:'#e0a95e', backgroundColor:'rgba(224,169,94,.15)', fill:true, tension:.3, pointRadius:0 }]},
+    options: baseChartOpts(chartRangeDays>60)
+  });
+
+  // weekly totals over ~12 weeks (or scaled to range)
+  const weeks = Math.max(4, Math.round(chartRangeDays/7));
+  const wLabels=[], wData=[];
+  for(let i=weeks-1;i>=0;i--){
+    const wEnd = addDays(end, -i*7);
+    const wStart = addDays(wEnd, -6);
+    wLabels.push(fmtDate(wStart).slice(5)+' → '+fmtDate(wEnd).slice(5));
+    wData.push(scoreForRange(fmtDate(wStart), fmtDate(wEnd)));
+  }
+  const ctx2 = document.getElementById('weekChart');
+  if(weekChart) weekChart.destroy();
+  weekChart = new Chart(ctx2, {
+    type:'bar',
+    data:{ labels:wLabels, datasets:[{ data:wData, backgroundColor: wData.map(v=>v>=0?'#5fbf8f':'#e0715e') }]},
+    options: baseChartOpts(true)
+  });
+
+  // per-rule breakdown within range
+  const startStr = fmtDate(addDays(end,-(chartRangeDays-1)));
+  const byRule = {};
+  state.logs.filter(l=>l.date>=startStr && l.date<=todayStr()).forEach(l=>{
+    const key = l.ruleId || ('special:'+(l.kind||'custom'));
+    byRule[key] = round2((byRule[key]||0) + l.points);
+  });
+  const rLabels = Object.keys(byRule).map(key=>{
+    if(key.startsWith('special:')){
+      const kind = key.split(':')[1];
+      if(kind==='streakBonus') return '🔥 Seri bonusu';
+      if(kind==='weeklyBonus') return '📈 Haftalık bonus';
+      return '📝 Özel girişler';
+    }
+    const r = ruleById(key); return r? r.name : '(silinmiş)';
+  });
+  const rData = Object.values(byRule);
+  const ctx3 = document.getElementById('ruleChart');
+  if(ruleChart) ruleChart.destroy();
+  ruleChart = new Chart(ctx3, {
+    type:'bar',
+    data:{ labels:rLabels, datasets:[{ data:rData, backgroundColor: rData.map(v=>v>=0?'#5fbf8f':'#e0715e') }]},
+    options: Object.assign(baseChartOpts(true), { indexAxis:'y' })
+  });
+}
+function baseChartOpts(hideXLabels){
+  return {
+    responsive:true,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ ticks:{ color:'#5d6376', maxTicksLimit: hideXLabels?6:10, font:{size:10} }, grid:{ color:'#2b2f3a' } },
+      y:{ ticks:{ color:'#5d6376', font:{size:10} }, grid:{ color:'#2b2f3a' } }
+    }
+  };
+}
+
+/* ---------- settings / GitHub sync ---------- */
+function renderSettings(){
+  document.getElementById('cfg-owner').value = cfg.owner||'';
+  document.getElementById('cfg-repo').value = cfg.repo||'';
+  document.getElementById('cfg-path').value = cfg.path||'data.json';
+  document.getElementById('cfg-branch').value = cfg.branch||'main';
+  document.getElementById('cfg-token').value = cfg.token||'';
+  document.getElementById('cfg-remember').checked = !!cfg.remember;
+  document.getElementById('cfg-autosync').checked = !!cfg.autosync;
+  document.getElementById('set-streak-enabled').checked = !!state.settings.streakEnabled;
+  document.getElementById('set-streak-length').value = state.settings.streakLength;
+  document.getElementById('set-streak-bonus').value = state.settings.streakBonus;
+  document.getElementById('set-weekly-enabled').checked = !!state.settings.weeklyEnabled;
+  document.getElementById('set-weekly-bonus').value = state.settings.weeklyBonus;
+}
+document.getElementById('set-streak-enabled').addEventListener('change', e=>{ state.settings.streakEnabled=e.target.checked; persist(); });
+document.getElementById('set-streak-length').addEventListener('input', e=>{ state.settings.streakLength=parseNum(e.target.value)||1; persist(); });
+document.getElementById('set-streak-bonus').addEventListener('input', e=>{ state.settings.streakBonus=parseNum(e.target.value)||0; persist(); });
+document.getElementById('set-weekly-enabled').addEventListener('change', e=>{ state.settings.weeklyEnabled=e.target.checked; persist(); });
+document.getElementById('set-weekly-bonus').addEventListener('input', e=>{ state.settings.weeklyBonus=parseNum(e.target.value)||0; persist(); });
+['owner','repo','path','branch','token'].forEach(f=>{
+  document.getElementById('cfg-'+f).addEventListener('input', (e)=>{ cfg[f]=e.target.value.trim(); saveCfg(); });
+});
+document.getElementById('cfg-remember').addEventListener('change', e=>{ cfg.remember=e.target.checked; saveCfg(); });
+document.getElementById('cfg-autosync').addEventListener('change', e=>{ cfg.autosync=e.target.checked; saveCfg(); });
+
+function ghConfigured(){ return cfg.owner && cfg.repo && cfg.path && cfg.token; }
+function ghApiUrl(){ return `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}`; }
+function setGhStatus(text, kind){
+  const el = document.getElementById('ghStatus');
+  el.textContent = text; el.className = 'status-pill '+kind;
+}
+
+async function ghGet(){
+  const res = await fetch(ghApiUrl()+`?ref=${encodeURIComponent(cfg.branch||'main')}`, {
+    headers:{ 'Authorization':'Bearer '+cfg.token, 'Accept':'application/vnd.github+json' }
+  });
+  if(res.status===404) return {notFound:true};
+  if(!res.ok) throw new Error('GitHub okuma hatası: '+res.status);
+  const json = await res.json();
+  const content = decodeURIComponent(escape(atob(json.content.replace(/\n/g,''))));
+  return { sha: json.sha, content };
+}
+async function ghPut(contentObj, sha){
+  const body = {
+    message: 'Verim Karnesi güncelleme · '+new Date().toISOString(),
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
+    branch: cfg.branch||'main'
+  };
+  if(sha) body.sha = sha;
+  const res = await fetch(ghApiUrl(), {
+    method:'PUT',
+    headers:{ 'Authorization':'Bearer '+cfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){ const t = await res.text(); throw new Error('GitHub yazma hatası: '+res.status+' '+t); }
+  return res.json();
+}
+
+document.getElementById('btnTest').addEventListener('click', async ()=>{
+  if(!ghConfigured()){ toast('Önce tüm alanları doldur.'); return; }
+  setGhStatus('kontrol ediliyor…','idle');
+  try{
+    const r = await ghGet();
+    setGhStatus(r.notFound ? 'bağlantı OK (dosya henüz yok)' : 'bağlantı OK', 'ok');
+    toast('GitHub bağlantısı başarılı.');
+  }catch(e){ setGhStatus('hata','err'); toast(e.message); }
+});
+
+document.getElementById('btnPull').addEventListener('click', async ()=>{
+  if(!ghConfigured()){ toast('Önce GitHub ayarlarını doldur.'); return; }
+  try{
+    const r = await ghGet();
+    if(r.notFound){ toast('GitHub üzerinde henüz veri yok. Önce "Şimdi kaydet" ile gönder.'); return; }
+    const remote = JSON.parse(r.content);
+    if(confirm("GitHub'daki veri bu cihazdakinin üzerine yazılacak. Emin misin?")){
+      state = remote;
+      normalizeState();
+      persist(false);
+      renderAll();
+      setGhStatus('senkron','ok');
+      toast("Veriler GitHub'dan yüklendi.");
+    }
+  }catch(e){ toast(e.message); }
+});
+
+let lastSha = null;
+document.getElementById('btnPush').addEventListener('click', ()=> pushToGithub(true));
+
+async function pushToGithub(manual){
+  if(!ghConfigured()){ if(manual) toast('Önce GitHub ayarlarını doldur.'); return; }
+  try{
+    let sha = lastSha;
+    if(!sha){
+      const existing = await ghGet();
+      sha = existing.notFound ? undefined : existing.sha;
+    }
+    const res = await ghPut(state, sha);
+    lastSha = res.content.sha;
+    setGhStatus('senkron','ok');
+    if(manual) toast("GitHub'a kaydedildi.");
+  }catch(e){
+    setGhStatus('hata','err');
+    if(manual) toast(e.message);
+  }
+}
+
+let syncTimer;
+function maybeAutoSync(){
+  if(!cfg.autosync || !ghConfigured()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=> pushToGithub(false), 2500);
+}
+
+/* export / import / reset */
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'verim-karnesi-yedek-'+todayStr()+'.json';
+  a.click();
+});
+document.getElementById('btnImportTrigger').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed.rules || !parsed.logs){ toast('Geçersiz dosya.'); return; }
+      if(confirm('Mevcut veriler bu dosyadakiyle değiştirilecek. Emin misin?')){
+        state = parsed; normalizeState(); persist(); renderAll(); toast('İçe aktarıldı.');
+      }
+    }catch(err){ toast('Dosya okunamadı.'); }
+  };
+  reader.readAsText(file);
+});
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(confirm('TÜM görevler ve kayıtlar silinecek. Bu geri alınamaz. Emin misin?')){
+    state = defaultState();
+    persist(); renderAll(); toast('Sıfırlandı.');
+  }
+});
+
+/* ---------- persist + render orchestration ---------- */
+function persist(triggerSync){
+  checkStreaksAndAwards();
+  saveLocal();
+  if(triggerSync!==false) maybeAutoSync();
+}
+function renderAll(){
+  renderRibbon();
+  renderDashboard();
+  renderRulesList();
+  if(document.getElementById('tab-calendar').classList.contains('active')) renderCalendar();
+  if(document.getElementById('tab-charts').classList.contains('active')) renderCharts();
+}
+
+/* ---------- init ---------- */
+updateRuleFormMode();
+document.getElementById('custom-date').value = todayStr();
+renderAll();
+})();
+</script>
+</body>
+</html>
