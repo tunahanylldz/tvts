@@ -2,30 +2,16 @@
   "startDate": "2026-08-29",
   "rules": [
     {
-      "id": "mtehcuyqgg0srd",
-      "name": "Sigara",
+      "id": "mtehnacmd3dfkb",
+      "name": "test",
       "type": "count",
-      "points": -1
-    },
-    {
-      "id": "mtehcuyqrbt5ek",
-      "name": "Spor yaptım",
-      "type": "count",
-      "points": 2
-    },
-    {
-      "id": "mtehcuyqux8i0f",
-      "name": "Gelir (TL)",
-      "type": "amount",
-      "unit": 500,
       "points": 1
     },
     {
-      "id": "mtehcuyqmwbqy2",
-      "name": "Gider (TL)",
-      "type": "amount",
-      "unit": 500,
-      "points": -1
+      "id": "mtehoh1fld2xmo",
+      "name": "Test2",
+      "type": "count",
+      "points": 2
     }
   ],
   "logs": [],
