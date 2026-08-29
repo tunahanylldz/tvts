@@ -1,6 +1,13 @@
 {
   "startDate": "2026-08-29",
-  "rules": [],
+  "rules": [
+    {
+      "id": "mtehnacmd3dfkb",
+      "name": "test",
+      "type": "count",
+      "points": 1
+    }
+  ],
   "logs": [],
   "settings": {
     "streakEnabled": true,
