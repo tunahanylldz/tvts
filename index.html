@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<!-- Firebase Kütüphaneleri -->
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg:#15171c;
@@ -54,7 +57,7 @@
     margin:0 0 2px;
     letter-spacing:-.02em;
   }
-  header.top .sub{color:var(--text-dim);font-size:.85rem;}
+  header.top .sub{color:var(--text-dim);font-size:.85rem;display:flex;justify-content:space-between;align-items:center;}
 
   .ribbon{
     display:flex;gap:3px;align-items:flex-end;
@@ -184,19 +187,7 @@
   .seg button.active{background:var(--gold);color:#221a0e;font-weight:600;}
 
   /* settings */
-  .field{margin-bottom:12px;}
-  .field label{font-size:.78rem;color:var(--text-dim);display:block;margin-bottom:5px;}
-  .field input{
-    width:100%;background:var(--bg-card);border:1px solid var(--line);color:var(--text);
-    border-radius:9px;padding:10px 11px;font-size:.88rem;
-  }
-  .check-row{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;}
-  .status-pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;}
-  .status-pill.ok{background:var(--plus-dim);color:var(--plus);}
-  .status-pill.err{background:var(--minus-dim);color:var(--minus);}
-  .status-pill.idle{background:var(--bg-raised);color:var(--text-faint);}
   .hint{color:var(--text-faint);font-size:.76rem;line-height:1.5;margin:6px 0 16px;}
-  .hint code{background:var(--bg-raised);padding:1px 5px;border-radius:5px;}
 
   /* toast */
   #toast{
@@ -227,8 +218,11 @@
 <body>
 
 <header class="top">
-  <h1 id="pageTitle">Verim Karnesi</h1>
-  <div class="sub" id="pageSub">bugün · <span id="todayLabel"></span></div>
+  <h1>Verim Karnesi</h1>
+  <div class="sub">
+    <span id="todayLabel"></span>
+    <span id="cloud-status" style="font-size:11px;color:var(--plus);">Bağlanıyor...</span>
+  </div>
 </header>
 <div class="ribbon" id="ribbon"></div>
 
@@ -340,36 +334,14 @@
 
   <!-- SETTINGS -->
   <section class="tab" id="tab-settings">
-    <h2 class="section-title">GitHub ile senkronizasyon <span class="status-pill idle" id="ghStatus">bağlı değil</span></h2>
-    <p class="hint">
-      Verilerin bir GitHub deposundaki tek bir JSON dosyasında (örn. <code>data.json</code>) saklanmasını sağlar,
-      böylece telefon ve bilgisayardan aynı veriye ulaşırsın. Depo <b>private</b> olmalı.
-      GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token,
-      sadece bu depoya <b>Contents: Read and write</b> izniyle oluştur.
-    </p>
-    <div class="field"><label>GitHub kullanıcı adı / organizasyon</label><input id="cfg-owner" placeholder="kullaniciadi"></div>
-    <div class="field"><label>Depo adı</label><input id="cfg-repo" placeholder="verim-takip-data"></div>
-    <div class="field"><label>Dosya yolu</label><input id="cfg-path" placeholder="data.json"></div>
-    <div class="field"><label>Branch</label><input id="cfg-branch" placeholder="main"></div>
-    <div class="field"><label>Personal Access Token</label><input id="cfg-token" type="password" placeholder="github_pat_..."></div>
-    <label class="check-row"><input type="checkbox" id="cfg-remember"> Bu tarayıcıda token'ı hatırla (kendi cihazında güvenliyse aç)</label>
-    <div class="btn-row">
-      <button class="btn ghost" id="btnTest">Bağlantıyı test et</button>
-      <button class="btn ghost" id="btnPull">GitHub'dan yükle</button>
-    </div>
-    <div class="btn-row" style="margin-top:8px">
-      <button class="btn" id="btnPush">Şimdi GitHub'a kaydet</button>
-    </div>
-    <label class="check-row"><input type="checkbox" id="cfg-autosync"> Her değişiklikte otomatik senkronize et</label>
-
     <h2 class="section-title">Seri (streak) ve gelişim bonusları</h2>
     <p class="hint">Bu bonuslar otomatik olarak "Bugün" listene ve puanlarına eklenir. İstemezsen sonradan normal bir kayıt gibi silebilirsin.</p>
-    <label class="check-row"><input type="checkbox" id="set-streak-enabled"> Üst üste pozitif gün serisine bonus ver</label>
+    <label class="check-row" style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;"><input type="checkbox" id="set-streak-enabled"> Üst üste pozitif gün serisine bonus ver</label>
     <div class="form-row">
       <div class="field"><label>Kaç gün üst üste pozitif olunca</label><input type="text" inputmode="numeric" id="set-streak-length" placeholder="3"></div>
       <div class="field"><label>Bonus puan</label><input type="text" inputmode="decimal" id="set-streak-bonus" placeholder="2"></div>
     </div>
-    <label class="check-row"><input type="checkbox" id="set-weekly-enabled"> Bu hafta önceki haftayı geçersem bonus ver</label>
+    <label class="check-row" style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text-dim);margin:8px 0 16px;"><input type="checkbox" id="set-weekly-enabled"> Bu hafta önceki haftayı geçersem bonus ver</label>
     <div class="field"><label>Bonus puan</label><input type="text" inputmode="decimal" id="set-weekly-bonus" placeholder="3"></div>
 
     <h2 class="section-title">Yedekleme</h2>
@@ -401,13 +373,22 @@
 (function(){
 "use strict";
 
-/* ---------- storage helpers (safe against environments without localStorage) ---------- */
-const memStore = {};
-function lsGet(k){ try{ const v = localStorage.getItem(k); return v===null?undefined:v; }catch(e){ return memStore[k]; } }
-function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){ memStore[k]=v; } }
+// ==========================================
+// FİREBASE YAPILANDIRMASI
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCa_0eQqJn6q5CKPsn8SHGUpGc7NsLY85c",
+  authDomain: "tkfts-57277.firebaseapp.com",
+  projectId: "tkfts-57277",
+  storageBucket: "tkfts-57277.firebasestorage.app",
+  messagingSenderId: "100556671492",
+  appId: "1:100556671492:web:9ac338008a46300a840351",
+  measurementId: "G-EMXHTGPESS"
+};
 
-const DATA_KEY = 'vk_data_v1';
-const CFG_KEY = 'vk_cfg_v1';
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection("tkfts_users").doc("tunahan_verim_karnesi");
 
 /* ---------- default state ---------- */
 function defaultState(){
@@ -423,6 +404,9 @@ function defaultState(){
     settings: { streakEnabled:false, streakLength:3, streakBonus:2, weeklyEnabled:false, weeklyBonus:3 }
   };
 }
+
+let state = defaultState();
+
 function normalizeState(){
   if(!state.rules) state.rules = [];
   if(!state.logs) state.logs = [];
@@ -436,7 +420,6 @@ function normalizeState(){
   if(typeof s.weeklyBonus!=='number') s.weeklyBonus=3;
 }
 function round2(n){ return Math.round((n+Number.EPSILON)*100)/100; }
-
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 function parseNum(v){
   if(v===null || v===undefined) return NaN;
@@ -449,27 +432,40 @@ function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(
 function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 
-let state = loadLocal() || defaultState();
-normalizeState();
-let cfg = loadCfg();
-
-function loadLocal(){
-  const raw = lsGet(DATA_KEY);
-  if(!raw) return null;
-  try{ return JSON.parse(raw); }catch(e){ return null; }
+/* ---------- Firebase Kayıt ve Yükleme ---------- */
+async function saveToCloud() {
+  try {
+    document.getElementById('cloud-status').textContent = "Kaydediliyor...";
+    document.getElementById('cloud-status').style.color = "var(--gold)";
+    await docRef.set(state);
+    document.getElementById('cloud-status').textContent = "● Bulut Güncel";
+    document.getElementById('cloud-status').style.color = "var(--plus)";
+  } catch (error) {
+    console.error("Firebase kayıt hatası:", error);
+    document.getElementById('cloud-status').textContent = "● Çevrimdışı";
+    document.getElementById('cloud-status').style.color = "var(--minus)";
+  }
 }
-function saveLocal(){ lsSet(DATA_KEY, JSON.stringify(state)); }
 
-function loadCfg(){
-  const raw = lsGet(CFG_KEY);
-  let c = {owner:'',repo:'',path:'data.json',branch:'main',token:'',remember:false,autosync:false};
-  if(raw){ try{ c = Object.assign(c, JSON.parse(raw)); }catch(e){} }
-  return c;
-}
-function saveCfg(){
-  const toSave = Object.assign({}, cfg);
-  if(!cfg.remember) toSave.token = ''; // never persist token unless user opts in
-  lsSet(CFG_KEY, JSON.stringify(toSave));
+async function loadFromCloud() {
+  try {
+    document.getElementById('cloud-status').textContent = "Yükleniyor...";
+    const doc = await docRef.get();
+    if (doc.exists) {
+      state = doc.data();
+    } else {
+      await saveToCloud();
+    }
+    normalizeState();
+    renderAll();
+    document.getElementById('cloud-status').textContent = "● Bulut Güncel";
+    document.getElementById('cloud-status').style.color = "var(--plus)";
+  } catch (error) {
+    console.error("Firebase okuma hatası:", error);
+    document.getElementById('cloud-status').textContent = "● Bağlantı Hatası";
+    document.getElementById('cloud-status').style.color = "var(--minus)";
+    renderAll();
+  }
 }
 
 /* ---------- toast ---------- */
@@ -489,10 +485,6 @@ function scoreForRange(startStr,endStr){
   return round2(state.logs.filter(l=>l.date>=startStr && l.date<=endStr).reduce((s,l)=>s+l.points,0));
 }
 function totalScore(){ return round2(state.logs.reduce((s,l)=>s+l.points,0)); }
-function daysSinceStart(){
-  const d = Math.floor((parseDate(todayStr()) - parseDate(state.startDate))/86400000)+1;
-  return Math.max(d,1);
-}
 function weekAverage(){
   const end = todayStr();
   const start = fmtDate(addDays(parseDate(end),-6));
@@ -555,7 +547,7 @@ function switchTab(name){
   if(name==='settings') renderSettings();
 }
 
-/* ---------- header ribbon (signature sparkline of last 60 days) ---------- */
+/* ---------- header ribbon ---------- */
 function renderRibbon(){
   const el = document.getElementById('ribbon');
   el.innerHTML = '';
@@ -681,6 +673,7 @@ document.getElementById('btnCustomAdd').addEventListener('click', ()=>{
   renderAll();
   toast((points>=0?'+':'')+points+' puan eklendi ('+date+')');
 });
+
 function logDisplayName(l){
   if(l.ruleId){
     const r = ruleById(l.ruleId);
@@ -849,7 +842,7 @@ document.querySelectorAll('#chartRange button').forEach(b=>{
 });
 
 function renderCharts(){
-  if(typeof Chart === 'undefined'){ return; } // offline fallback: skip silently
+  if(typeof Chart === 'undefined'){ return; }
   const end = parseDate(todayStr());
   const labels = [], data = [];
   for(let i=chartRangeDays-1;i>=0;i--){
@@ -865,7 +858,6 @@ function renderCharts(){
     options: baseChartOpts(chartRangeDays>60)
   });
 
-  // weekly totals over ~12 weeks (or scaled to range)
   const weeks = Math.max(4, Math.round(chartRangeDays/7));
   const wLabels=[], wData=[];
   for(let i=weeks-1;i>=0;i--){
@@ -882,7 +874,6 @@ function renderCharts(){
     options: baseChartOpts(true)
   });
 
-  // per-rule breakdown within range
   const startStr = fmtDate(addDays(end,-(chartRangeDays-1)));
   const byRule = {};
   state.logs.filter(l=>l.date>=startStr && l.date<=todayStr()).forEach(l=>{
@@ -918,15 +909,8 @@ function baseChartOpts(hideXLabels){
   };
 }
 
-/* ---------- settings / GitHub sync ---------- */
+/* ---------- settings ---------- */
 function renderSettings(){
-  document.getElementById('cfg-owner').value = cfg.owner||'';
-  document.getElementById('cfg-repo').value = cfg.repo||'';
-  document.getElementById('cfg-path').value = cfg.path||'data.json';
-  document.getElementById('cfg-branch').value = cfg.branch||'main';
-  document.getElementById('cfg-token').value = cfg.token||'';
-  document.getElementById('cfg-remember').checked = !!cfg.remember;
-  document.getElementById('cfg-autosync').checked = !!cfg.autosync;
   document.getElementById('set-streak-enabled').checked = !!state.settings.streakEnabled;
   document.getElementById('set-streak-length').value = state.settings.streakLength;
   document.getElementById('set-streak-bonus').value = state.settings.streakBonus;
@@ -938,99 +922,6 @@ document.getElementById('set-streak-length').addEventListener('input', e=>{ stat
 document.getElementById('set-streak-bonus').addEventListener('input', e=>{ state.settings.streakBonus=parseNum(e.target.value)||0; persist(); });
 document.getElementById('set-weekly-enabled').addEventListener('change', e=>{ state.settings.weeklyEnabled=e.target.checked; persist(); });
 document.getElementById('set-weekly-bonus').addEventListener('input', e=>{ state.settings.weeklyBonus=parseNum(e.target.value)||0; persist(); });
-['owner','repo','path','branch','token'].forEach(f=>{
-  document.getElementById('cfg-'+f).addEventListener('input', (e)=>{ cfg[f]=e.target.value.trim(); saveCfg(); });
-});
-document.getElementById('cfg-remember').addEventListener('change', e=>{ cfg.remember=e.target.checked; saveCfg(); });
-document.getElementById('cfg-autosync').addEventListener('change', e=>{ cfg.autosync=e.target.checked; saveCfg(); });
-
-function ghConfigured(){ return cfg.owner && cfg.repo && cfg.path && cfg.token; }
-function ghApiUrl(){ return `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}`; }
-function setGhStatus(text, kind){
-  const el = document.getElementById('ghStatus');
-  el.textContent = text; el.className = 'status-pill '+kind;
-}
-
-async function ghGet(){
-  const res = await fetch(ghApiUrl()+`?ref=${encodeURIComponent(cfg.branch||'main')}`, {
-    headers:{ 'Authorization':'Bearer '+cfg.token, 'Accept':'application/vnd.github+json' }
-  });
-  if(res.status===404) return {notFound:true};
-  if(!res.ok) throw new Error('GitHub okuma hatası: '+res.status);
-  const json = await res.json();
-  const content = decodeURIComponent(escape(atob(json.content.replace(/\n/g,''))));
-  return { sha: json.sha, content };
-}
-async function ghPut(contentObj, sha){
-  const body = {
-    message: 'Verim Karnesi güncelleme · '+new Date().toISOString(),
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(contentObj, null, 2)))),
-    branch: cfg.branch||'main'
-  };
-  if(sha) body.sha = sha;
-  const res = await fetch(ghApiUrl(), {
-    method:'PUT',
-    headers:{ 'Authorization':'Bearer '+cfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
-    body: JSON.stringify(body)
-  });
-  if(!res.ok){ const t = await res.text(); throw new Error('GitHub yazma hatası: '+res.status+' '+t); }
-  return res.json();
-}
-
-document.getElementById('btnTest').addEventListener('click', async ()=>{
-  if(!ghConfigured()){ toast('Önce tüm alanları doldur.'); return; }
-  setGhStatus('kontrol ediliyor…','idle');
-  try{
-    const r = await ghGet();
-    setGhStatus(r.notFound ? 'bağlantı OK (dosya henüz yok)' : 'bağlantı OK', 'ok');
-    toast('GitHub bağlantısı başarılı.');
-  }catch(e){ setGhStatus('hata','err'); toast(e.message); }
-});
-
-document.getElementById('btnPull').addEventListener('click', async ()=>{
-  if(!ghConfigured()){ toast('Önce GitHub ayarlarını doldur.'); return; }
-  try{
-    const r = await ghGet();
-    if(r.notFound){ toast('GitHub üzerinde henüz veri yok. Önce "Şimdi kaydet" ile gönder.'); return; }
-    const remote = JSON.parse(r.content);
-    if(confirm("GitHub'daki veri bu cihazdakinin üzerine yazılacak. Emin misin?")){
-      state = remote;
-      normalizeState();
-      persist(false);
-      renderAll();
-      setGhStatus('senkron','ok');
-      toast("Veriler GitHub'dan yüklendi.");
-    }
-  }catch(e){ toast(e.message); }
-});
-
-let lastSha = null;
-document.getElementById('btnPush').addEventListener('click', ()=> pushToGithub(true));
-
-async function pushToGithub(manual){
-  if(!ghConfigured()){ if(manual) toast('Önce GitHub ayarlarını doldur.'); return; }
-  try{
-    let sha = lastSha;
-    if(!sha){
-      const existing = await ghGet();
-      sha = existing.notFound ? undefined : existing.sha;
-    }
-    const res = await ghPut(state, sha);
-    lastSha = res.content.sha;
-    setGhStatus('senkron','ok');
-    if(manual) toast("GitHub'a kaydedildi.");
-  }catch(e){
-    setGhStatus('hata','err');
-    if(manual) toast(e.message);
-  }
-}
-
-let syncTimer;
-function maybeAutoSync(){
-  if(!cfg.autosync || !ghConfigured()) return;
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(()=> pushToGithub(false), 2500);
-}
 
 /* export / import / reset */
 document.getElementById('btnExport').addEventListener('click', ()=>{
@@ -1063,10 +954,9 @@ document.getElementById('btnReset').addEventListener('click', ()=>{
 });
 
 /* ---------- persist + render orchestration ---------- */
-function persist(triggerSync){
+function persist(){
   checkStreaksAndAwards();
-  saveLocal();
-  if(triggerSync!==false) maybeAutoSync();
+  saveToCloud();
 }
 function renderAll(){
   renderRibbon();
@@ -1079,7 +969,7 @@ function renderAll(){
 /* ---------- init ---------- */
 updateRuleFormMode();
 document.getElementById('custom-date').value = todayStr();
-renderAll();
+loadFromCloud();
 })();
 </script>
 </body>
